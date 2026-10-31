@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Baby Hero vs Kid Villain - PC Racing Champion</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-fredoka {
+            font-family: 'Fredoka One', cursive;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 12px rgba(236, 72, 153, 0.8)); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 22px rgba(250, 204, 21, 0.9)); transform: scale(1.04); }
+        }
+        .animate-glow {
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+        .game-btn {
+            transition: all 0.15s ease;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.3);
+        }
+        .game-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.3);
+        }
+        canvas {
+            display: block;
+            border-radius: 1.5rem;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col justify-center items-center overflow-hidden p-2 sm:p-4">
+
+    <!-- MAIN CONTAINER -->
+    <div class="relative w-full max-w-4xl bg-slate-900 rounded-3xl shadow-2xl border-4 border-amber-400/40 overflow-hidden flex flex-col items-center">
+        
+        <!-- HEADER / TITLE BAR -->
+        <header class="w-full bg-gradient-to-r from-pink-600 via-purple-700 to-cyan-600 p-3 sm:p-4 text-center shadow-lg flex justify-between items-center z-10">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl sm:text-3xl">🏎️⚡</span>
+                <h1 class="text-xl sm:text-3xl font-fredoka tracking-wider text-yellow-300 drop-shadow-md">
+                    HERO BABY vs VILLAIN KID
+                </h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="hidden sm:block text-xs bg-black/40 px-3 py-1 rounded-full border border-white/20">
+                    <span class="text-amber-300 font-bold">PC Controls:</span> WASD / Arrow Keys | Space = Nitro
+                </div>
+                <button id="soundToggleBtn" class="bg-white/20 hover:bg-white/30 p-2 rounded-full text-white transition text-sm sm:text-base">
+                    <i id="soundIcon" class="fas fa-volume-up"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- SCREEN 1: GAME START & HERO/VILLAIN SHOWDOWN MENU -->
+        <div id="selectionScreen" class="w-full p-4 sm:p-8 flex flex-col items-center justify-center space-y-6">
+            <h2 class="text-2xl sm:text-4xl font-fredoka text-amber-300 text-center animate-bounce">
+                HERO BABY SHOWDOWN! 🏆
+            </h2>
+            <p class="text-slate-300 text-sm sm:text-base text-center max-w-md">
+                Drive as the <span class="text-pink-400 font-bold">Hero (Baby 1)</span> and defeat the sneaky <span class="text-red-400 font-bold">Villain Boss (Kid 2)</span> driven by Computer AI!
+            </p>
+
+            <!-- RACER VS DISPLAY CARDS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+                
+                <!-- HERO CARD (PLAYER - BABY 1) -->
+                <div class="bg-gradient-to-b from-pink-950/80 to-slate-800 border-4 border-pink-400 rounded-3xl p-5 flex flex-col items-center shadow-xl relative">
+                    <div class="absolute -top-3 left-4 bg-emerald-500 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider text-slate-950">
+                        PLAYER (YOU)
+                    </div>
+                    <div class="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-pink-400 overflow-hidden bg-pink-100 flex items-center justify-center relative my-2 shadow-inner">
+                        <img id="imgPreview1" src="" alt="Hero Baby" class="w-full h-full object-cover hidden">
+                        <div id="defaultFace1" class="flex flex-col items-center justify-center text-pink-600">
+                            <span class="text-5xl">👶</span>
+                            <span class="text-xs font-bold mt-1">Hero Baby</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-fredoka text-pink-300">HERO BABY</h3>
+                    <p class="text-xs text-slate-300 text-center mt-1">Super agility & high nitro speed power!</p>
+                    
+                    <label class="mt-3 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center space-x-2 transition shadow">
+                        <i class="fas fa-camera"></i>
+                        <span>Change Hero Photo</span>
+                        <input type="file" id="fileInput1" accept="image/*" class="hidden" onchange="handleImageUpload(event, 1)">
+                    </label>
+                </div>
+
+                <!-- VILLAIN CARD (COMPUTER AI - KID 2) -->
+                <div class="bg-gradient-to-b from-red-950/80 to-slate-800 border-4 border-red-500 rounded-3xl p-5 flex flex-col items-center shadow-xl relative">
+                    <div class="absolute -top-3 right-4 bg-red-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider text-white">
+                        COMPUTER AI (VILLAIN)
+                    </div>
+                    <div class="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-red-500 overflow-hidden bg-red-950 flex items-center justify-center relative my-2 shadow-inner">
+                        <img id="imgPreview2" src="" alt="Villain Kid" class="w-full h-full object-cover hidden">
+                        <div id="defaultFace2" class="flex flex-col items-center justify-center text-red-500">
+                            <span class="text-5xl">😈</span>
+                            <span class="text-xs font-bold mt-1">Villain Boss</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-fredoka text-red-400">VILLAIN KID</h3>
+                    <p class="text-xs text-slate-300 text-center mt-1">Aggressive computer AI driver & obstacle dropper!</p>
+
+                    <label class="mt-3 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center space-x-2 transition shadow">
+                        <i class="fas fa-camera"></i>
+                        <span>Change Villain Photo</span>
+                        <input type="file" id="fileInput2" accept="image/*" class="hidden" onchange="handleImageUpload(event, 2)">
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- GAME PLAY BUTTON -->
+            <button id="startRaceBtn" onclick="startRace()" class="game-btn bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-slate-950 font-fredoka text-2xl px-12 py-4 rounded-2xl animate-glow tracking-wide flex items-center space-x-3">
+                <i class="fas fa-play"></i>
+                <span>START RACE NOW!</span>
+            </button>
+        </div>
+
+        <!-- SCREEN 2: RACING CANVAS -->
+        <div id="gameScreen" class="w-full relative flex-col items-center justify-center hidden p-2 sm:p-4">
+            
+            <!-- TOP DASHBOARD / HUD -->
+            <div class="w-full max-w-3xl flex justify-between items-center mb-2 px-4 py-2 bg-slate-900/90 rounded-2xl border border-slate-700 text-xs sm:text-sm">
+                <div class="flex items-center space-x-2">
+                    <span class="text-amber-400 font-bold">SCORE:</span>
+                    <span id="hudScore" class="font-fredoka text-lg text-yellow-300">0</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-cyan-400 font-bold">DISTANCE:</span>
+                    <span id="hudDistance" class="font-fredoka text-lg text-white">0m / 5000m</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-emerald-400 font-bold">SPEED:</span>
+                    <span id="hudSpeed" class="font-fredoka text-lg text-emerald-300">0 km/h</span>
+                </div>
+                <!-- NITRO METER BAR -->
+                <div class="flex items-center space-x-2">
+                    <span class="text-amber-400 font-bold hidden sm:inline">NITRO:</span>
+                    <div class="w-20 sm:w-28 bg-slate-800 rounded-full h-4 border border-slate-600 overflow-hidden">
+                        <div id="nitroBar" class="bg-gradient-to-r from-amber-400 to-orange-500 h-full w-0 transition-all duration-75"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GAME CANVAS -->
+            <div class="relative w-full max-w-3xl flex justify-center items-center">
+                <canvas id="raceCanvas" width="700" height="480" class="w-full max-w-3xl h-auto border-4 border-slate-700 shadow-2xl bg-emerald-800"></canvas>
+            </div>
+
+            <!-- ON-SCREEN TOUCH / MOBILE CONTROLS FOR RESPONSIVENESS -->
+            <div class="w-full max-w-3xl mt-3 grid grid-cols-4 gap-2 px-2">
+                <button id="btnLeft" class="game-btn bg-indigo-600 active:bg-indigo-700 text-white font-fredoka py-3 rounded-2xl text-lg flex justify-center items-center">
+                    <i class="fas fa-arrow-left mr-1"></i> LEFT (A)
+                </button>
+                <button id="btnBrake" class="game-btn bg-slate-700 active:bg-slate-800 text-white font-fredoka py-3 rounded-2xl text-lg flex justify-center items-center">
+                    🛑 BRAKE (S)
+                </button>
+                <button id="btnRight" class="game-btn bg-indigo-600 active:bg-indigo-700 text-white font-fredoka py-3 rounded-2xl text-lg flex justify-center items-center">
+                    RIGHT (D) <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+                <button id="btnNitro" class="game-btn bg-amber-500 active:bg-amber-600 text-slate-950 font-fredoka py-3 rounded-2xl text-lg flex justify-center items-center">
+                    🚀 TURBO (Space)
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: GAME OVER / VICTORY / DEFEAT SCREEN -->
+        <div id="victoryScreen" class="absolute inset-0 bg-slate-950/95 flex flex-col justify-center items-center p-6 text-center hidden z-20">
+            <div id="resultIcon" class="text-6xl mb-2 animate-bounce">🏆</div>
+            <h2 id="winnerTitle" class="text-3xl sm:text-5xl font-fredoka text-amber-300 drop-shadow-lg mb-2">
+                HERO BABY WINS!
+            </h2>
+            <p id="winnerSub" class="text-slate-300 text-sm sm:text-base mb-6">You outran the Villain Kid computer driver!</p>
+
+            <!-- Winner Face Preview Avatar -->
+            <div class="w-32 h-32 rounded-full border-4 border-amber-400 overflow-hidden bg-slate-800 mb-6 flex items-center justify-center shadow-2xl">
+                <img id="winnerAvatarImg" src="" class="w-full h-full object-cover hidden">
+                <span id="winnerAvatarEmoji" class="text-6xl">👶</span>
+            </div>
+
+            <div class="bg-slate-800/90 p-4 rounded-2xl border border-slate-700 w-full max-w-sm mb-6 space-y-2 text-sm">
+                <div class="flex justify-between text-slate-300">
+                    <span>Total Points:</span>
+                    <span id="finalScore" class="font-fredoka text-amber-300 text-base">0</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                    <span>Max Speed:</span>
+                    <span id="finalSpeed" class="font-fredoka text-emerald-400 text-base">0 km/h</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                    <span>Milk Bottles Collected:</span>
+                    <span id="finalItems" class="font-fredoka text-pink-400 text-base">0</span>
+                </div>
+            </div>
+
+            <div class="flex space-x-4">
+                <button onclick="startRace()" class="game-btn bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-fredoka px-6 py-3 rounded-xl text-lg flex items-center space-x-2">
+                    <i class="fas fa-redo"></i>
+                    <span>RETRY RACE</span>
+                </button>
+                <button onclick="backToMenu()" class="game-btn bg-slate-700 hover:bg-slate-600 text-white font-fredoka px-6 py-3 rounded-xl text-lg flex items-center space-x-2">
+                    <i class="fas fa-home"></i>
+                    <span>MAIN MENU</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT GAME LOGIC -->
+    <script>
+        // --- WEB AUDIO API SOUND SYSTEM ---
+        class SoundSystem {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+            }
+            playEngine() {
+                if (this.muted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(90, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(160, this.ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.1);
+                } catch(e) {}
+            }
+            playPickup() {
+                if (this.muted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(520, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(950, this.ctx.currentTime + 0.18);
+                    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.18);
+                } catch(e) {}
+            }
+            playHit() {
+                if (this.muted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(130, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(35, this.ctx.currentTime + 0.25);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.25);
+                } catch(e) {}
+            }
+            playNitro() {
+                if (this.muted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(600, this.ctx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.3);
+                } catch(e) {}
+            }
+            playWin() {
+                if (this.muted || !this.ctx) return;
+                try {
+                    const notes = [261.63, 329.63, 392.00, 523.25, 659.25];
+                    notes.forEach((freq, i) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.1);
+                        gain.gain.setValueAtTime(0.15, this.ctx.currentTime + i * 0.1);
+                        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.1 + 0.3);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(this.ctx.currentTime + i * 0.1);
+                        osc.stop(this.ctx.currentTime + i * 0.1 + 0.3);
+                    });
+                } catch(e) {}
+            }
+            playLose() {
+                if (this.muted || !this.ctx) return;
+                try {
+                    const notes = [300, 250, 200, 150];
+                    notes.forEach((freq, i) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.15);
+                        gain.gain.setValueAtTime(0.1, this.ctx.currentTime + i * 0.15);
+                        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.15 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(this.ctx.currentTime + i * 0.15);
+                        osc.stop(this.ctx.currentTime + i * 0.15 + 0.25);
+                    });
+                } catch(e) {}
+            }
+        }
+
+        const soundSys = new SoundSystem();
+        document.getElementById('soundToggleBtn').addEventListener('click', () => {
+            soundSys.muted = !soundSys.muted;
+            document.getElementById('soundIcon').className = soundSys.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+        });
+
+        // --- GLOBAL VARIABLES ---
+        let racerImages = { 1: null, 2: null }; // 1 = Hero Baby, 2 = Villain Kid
+        let isGameRunning = false;
+        let animationFrameId = null;
+
+        // Player (Hero Baby 1)
+        let player = {
+            x: 380,
+            y: 360,
+            width: 50,
+            height: 80,
+            speed: 3.5,      // Standard cruising speed
+            minSpeed: 2.5,   
+            maxSpeed: 7.5,   // Equal max speed
+            accel: 0.25,
+            friction: 0.98,
+            nitro: 50,
+            maxNitro: 100,
+            score: 0,
+            itemsCollected: 0,
+            topSpeedReached: 0
+        };
+
+        // Rival Villain (Kid 2 - Computer AI with Village Racing Skill)
+        let villainAI = {
+            x: 240,
+            y: 300,
+            width: 50,
+            height: 80,
+            speed: 3.5,      // Equal base speed to Hero
+            maxSpeed: 7.5,   // Equal max speed to Hero
+            laneChangeTimer: 0,
+            targetX: 240,
+            aiWaverTimer: 0
+        };
+
+        let raceDistance = 0;
+        const totalRaceDistance = 5000;
+        let roadOffset = 0;
+        let obstacles = [];
+        let items = [];
+        let particles = [];
+
+        // Key bindings
+        const keys = { Left: false, Right: false, Up: false, Down: false, Nitro: false };
+
+        const canvas = document.getElementById('raceCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- IMAGE UPLOAD HANDLER ---
+        function handleImageUpload(event, racerId) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        racerImages[racerId] = img;
+                        const previewEl = document.getElementById(`imgPreview${racerId}`);
+                        const defaultFace = document.getElementById(`defaultFace${racerId}`);
+                        previewEl.src = e.target.result;
+                        previewEl.classList.remove('hidden');
+                        defaultFace.classList.add('hidden');
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // --- START & RESET GAME ---
+        function startRace() {
+            soundSys.init();
+            document.getElementById('selectionScreen').classList.add('hidden');
+            document.getElementById('victoryScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.add('flex');
+            
+            resetGameVariables();
+            isGameRunning = true;
+            gameLoop();
+        }
+
+        function resetGameVariables() {
+            player.x = canvas.width / 2 + 30;
+            player.y = 360;
+            player.speed = 3.5;
+            player.nitro = 50; // Start with half nitro
+            player.score = 0;
+            player.itemsCollected = 0;
+            player.topSpeedReached = 0;
+
+            villainAI.x = canvas.width / 2 - 80;
+            villainAI.y = 300;
+            villainAI.speed = 3.5;
+
+            raceDistance = 0;
+            obstacles = [];
+            items = [];
+            particles = [];
+        }
+
+        // --- KEYBOARD CONTROLS FOR PC ---
+        window.addEventListener('keydown', (e) => {
+            if (['ArrowLeft', 'a', 'A'].includes(e.key)) keys.Left = true;
+            if (['ArrowRight', 'd', 'D'].includes(e.key)) keys.Right = true;
+            if (['ArrowUp', 'w', 'W'].includes(e.key)) keys.Up = true;
+            if (['ArrowDown', 's', 'S'].includes(e.key)) keys.Down = true;
+            if ([' ', 'Control'].includes(e.key)) {
+                keys.Nitro = true;
+                e.preventDefault();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (['ArrowLeft', 'a', 'A'].includes(e.key)) keys.Left = false;
+            if (['ArrowRight', 'd', 'D'].includes(e.key)) keys.Right = false;
+            if (['ArrowUp', 'w', 'W'].includes(e.key)) keys.Up = false;
+            if (['ArrowDown', 's', 'S'].includes(e.key)) keys.Down = false;
+            if ([' ', 'Control'].includes(e.key)) keys.Nitro = false;
+        });
+
+        // Touch & Mouse Control bindings for onscreen buttons
+        const bindTouch = (elemId, keyName) => {
+            const elem = document.getElementById(elemId);
+            const startHandler = (e) => { e.preventDefault(); keys[keyName] = true; };
+            const endHandler = (e) => { e.preventDefault(); keys[keyName] = false; };
+            
+            elem.addEventListener('touchstart', startHandler, { passive: false });
+            elem.addEventListener('touchend', endHandler, { passive: false });
+            elem.addEventListener('mousedown', startHandler);
+            elem.addEventListener('mouseup', endHandler);
+            elem.addEventListener('mouseleave', endHandler);
+        };
+        bindTouch('btnLeft', 'Left');
+        bindTouch('btnRight', 'Right');
+        bindTouch('btnBrake', 'Down');
+        bindTouch('btnNitro', 'Nitro');
+
+        // --- MAIN GAME LOOP ---
+        function gameLoop() {
+            if (!isGameRunning) return;
+            update();
+            render();
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // --- UPDATE GAME STATE ---
+        function update() {
+            // Target max speed calculation
+            let currentMaxSpeed = player.maxSpeed;
+
+            // Turbo / Nitro Boost
+            if (keys.Nitro && player.nitro > 0) {
+                currentMaxSpeed = player.maxSpeed * 1.4;
+                player.speed = Math.min(player.speed + 0.4, currentMaxSpeed);
+                player.nitro -= 0.6;
+                createNitroParticles();
+                if (Math.random() < 0.2) soundSys.playNitro();
+            } else if (keys.Up) {
+                // Manual Acceleration
+                if (player.speed < currentMaxSpeed) player.speed += player.accel;
+            } else if (keys.Down) {
+                // Brake / Slowdown
+                player.speed = Math.max(1.5, player.speed * 0.9);
+            } else {
+                // Maintain dynamic cruise speed when no keys pressed
+                if (player.speed < player.minSpeed) {
+                    player.speed += player.accel;
+                } else if (player.speed > player.minSpeed + 2) {
+                    player.speed *= player.friction;
+                }
+            }
+
+            if (Math.random() < 0.08 && player.speed > 2) soundSys.playEngine();
+
+            // Track top speed
+            const speedKmH = Math.round(player.speed * 18);
+            if (speedKmH > player.topSpeedReached) player.topSpeedReached = speedKmH;
+
+            // Steering Left / Right Movement Speed
+            const turnSpeed = 7.5;
+            if (keys.Left) player.x -= turnSpeed;
+            if (keys.Right) player.x += turnSpeed;
+
+            // Keep inside road bounds
+            const roadLeft = 140;
+            const roadRight = canvas.width - 140 - player.width;
+            player.x = Math.max(roadLeft, Math.min(roadRight, player.x));
+
+            // Move road animation & track distance relative to player speed
+            roadOffset += player.speed * 2.5;
+            raceDistance += player.speed * 1.1;
+
+            // --- BALANCED "VILLAGE RACER" COMPUTER AI VILLAIN LOGIC ---
+            // Subtle speed modulation simulating casual human driver (stays balanced with player)
+            villainAI.aiWaverTimer += 0.03;
+            let targetAISpeed = player.speed + Math.sin(villainAI.aiWaverTimer) * 0.8;
+            targetAISpeed = Math.max(2.0, Math.min(villainAI.maxSpeed, targetAISpeed));
+            villainAI.speed += (targetAISpeed - villainAI.speed) * 0.1;
+
+            // Smooth position update relative to player speed
+            villainAI.y += (player.speed - villainAI.speed) * 0.6;
+            // Keep Villain car visible on screen alongside player
+            villainAI.y = Math.max(100, Math.min(canvas.height - 120, villainAI.y));
+
+            // Casual AI Steering logic (takes wider, average turns)
+            villainAI.laneChangeTimer++;
+            if (villainAI.laneChangeTimer > 120) {
+                villainAI.laneChangeTimer = 0;
+                villainAI.targetX = roadLeft + Math.random() * (roadRight - roadLeft);
+            }
+            villainAI.x += (villainAI.targetX - villainAI.x) * 0.025;
+            villainAI.x = Math.max(roadLeft, Math.min(roadRight, villainAI.x));
+
+            // Villain drops occasional oil slicks
+            if (villainAI.y < player.y - 50 && Math.random() < 0.005) {
+                obstacles.push({
+                    x: villainAI.x + 10,
+                    y: villainAI.y + villainAI.height,
+                    width: 35,
+                    height: 35,
+                    type: 'oil'
+                });
+            }
+
+            // Spawn random track objects
+            spawnTrackObjects();
+
+            // Move & check obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.y += player.speed;
+
+                if (checkCollision(player, obs)) {
+                    soundSys.playHit();
+                    player.speed = Math.max(1.5, player.speed * 0.4); // Slowdown hit
+                    createSparks(player.x + player.width/2, player.y);
+                    obstacles.splice(i, 1);
+                    continue;
+                }
+                if (obs.y > canvas.height + 50) obstacles.splice(i, 1);
+            }
+
+            // Move & check collectible items
+            for (let i = items.length - 1; i >= 0; i--) {
+                let item = items[i];
+                item.y += player.speed;
+
+                if (checkCollision(player, item)) {
+                    soundSys.playPickup();
+                    if (item.type === 'bottle') {
+                        player.score += 150;
+                        player.itemsCollected++;
+                    } else if (item.type === 'star') {
+                        player.score += 300;
+                        player.nitro = Math.min(player.maxNitro, player.nitro + 45); // Refill Nitro
+                    }
+                    createStars(item.x, item.y);
+                    items.splice(i, 1);
+                    continue;
+                }
+                if (item.y > canvas.height + 50) items.splice(i, 1);
+            }
+
+            // Update Particles
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.03;
+                if (p.alpha <= 0) particles.splice(index, 1);
+            });
+
+            // Update UI HUD
+            document.getElementById('hudScore').innerText = Math.round(player.score);
+            document.getElementById('hudDistance').innerText = `${Math.min(Math.round(raceDistance), totalRaceDistance)}m / ${totalRaceDistance}m`;
+            document.getElementById('hudSpeed').innerText = `${speedKmH} km/h`;
+            document.getElementById('nitroBar').style.width = `${(player.nitro / player.maxNitro) * 100}%`;
+
+            // Check Finish Line Win / Loss Condition
+            if (raceDistance >= totalRaceDistance) {
+                const heroWon = player.y <= villainAI.y || raceDistance >= totalRaceDistance;
+                triggerGameEnd(heroWon);
+            }
+        }
+
+        function checkCollision(rect1, rect2) {
+            return (
+                rect1.x < rect2.x + rect2.width &&
+                rect1.x + rect1.width > rect2.x &&
+                rect1.y < rect2.y + rect2.height &&
+                rect1.y + rect1.height > rect2.y
+            );
+        }
+
+        function spawnTrackObjects() {
+            if (Math.random() < 0.02) {
+                const laneX = 150 + Math.random() * (canvas.width - 340);
+                const isObstacle = Math.random() > 0.45;
+                if (isObstacle) {
+                    obstacles.push({
+                        x: laneX,
+                        y: -60,
+                        width: 38,
+                        height: 38,
+                        type: Math.random() > 0.5 ? 'cone' : 'oil'
+                    });
+                } else {
+                    items.push({
+                        x: laneX,
+                        y: -60,
+                        width: 35,
+                        height: 35,
+                        type: Math.random() > 0.3 ? 'bottle' : 'star'
+                    });
+                }
+            }
+        }
+
+        // --- PARTICLE EFFECTS ---
+        function createNitroParticles() {
+            particles.push({
+                x: player.x + player.width / 2 + (Math.random() * 12 - 6),
+                y: player.y + player.height,
+                vx: (Math.random() - 0.5) * 2,
+                vy: Math.random() * 4 + 2,
+                color: '#f59e0b',
+                size: Math.random() * 6 + 4,
+                alpha: 1
+            });
+        }
+
+        function createStars(x, y) {
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    color: '#facc15',
+                    size: Math.random() * 7 + 4,
+                    alpha: 1
+                });
+            }
+        }
+
+        function createSparks(x, y) {
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    color: '#ef4444',
+                    size: Math.random() * 5 + 3,
+                    alpha: 1
+                });
+            }
+        }
+
+        // --- RENDER GAME GRAPHICS ---
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Grass background
+            ctx.fillStyle = '#15803d';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Main Track Road
+            const roadWidth = 420;
+            const roadX = (canvas.width - roadWidth) / 2;
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(roadX, 0, roadWidth, canvas.height);
+
+            // Red & White Road Curbs
+            const curbWidth = 15;
+            const stripeHeight = 40;
+            for (let y = -stripeHeight + (roadOffset % (stripeHeight * 2)); y < canvas.height; y += stripeHeight) {
+                ctx.fillStyle = (Math.floor(y / stripeHeight) % 2 === 0) ? '#ef4444' : '#ffffff';
+                ctx.fillRect(roadX - curbWidth, y, curbWidth, stripeHeight);
+                ctx.fillRect(roadX + roadWidth, y, curbWidth, stripeHeight);
+            }
+
+            // Animated Lane Dashes
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 6;
+            ctx.setLineDash([30, 30]);
+            ctx.lineDashOffset = -roadOffset;
+            ctx.beginPath();
+            ctx.moveTo(roadX + roadWidth / 3, 0);
+            ctx.lineTo(roadX + roadWidth / 3, canvas.height);
+            ctx.moveTo(roadX + (roadWidth / 3) * 2, 0);
+            ctx.lineTo(roadX + (roadWidth / 3) * 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw Obstacles
+            obstacles.forEach(obs => {
+                if (obs.type === 'cone') {
+                    ctx.fillStyle = '#f97316';
+                    ctx.beginPath();
+                    ctx.moveTo(obs.x + obs.width / 2, obs.y);
+                    ctx.lineTo(obs.x, obs.y + obs.height);
+                    ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(obs.x + 8, obs.y + 20, obs.width - 16, 5);
+                } else {
+                    ctx.fillStyle = '#0f172a';
+                    ctx.beginPath();
+                    ctx.ellipse(obs.x + obs.width/2, obs.y + obs.height/2, obs.width/2, obs.height/3, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+
+            // Draw Items
+            items.forEach(item => {
+                if (item.type === 'bottle') {
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.fillRect(item.x + 8, item.y + 10, 18, 22);
+                    ctx.fillStyle = '#f472b6';
+                    ctx.fillRect(item.x + 6, item.y + 4, 22, 6);
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillRect(item.x + 12, item.y, 10, 5);
+                } else {
+                    ctx.fillStyle = '#facc15';
+                    ctx.font = '28px sans-serif';
+                    ctx.fillText('⭐', item.x, item.y + 25);
+                }
+            });
+
+            // Draw Particles
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Draw Villain Car (Kid 2 AI - Red Car)
+            drawRacerCar(villainAI.x, villainAI.y, 2, false);
+
+            // Draw Hero Car (Baby 1 Player - Pink Car)
+            drawRacerCar(player.x, player.y, 1, true);
+        }
+
+        // --- CAR & FACE CUTOUT DRAWING ---
+        function drawRacerCar(x, y, racerId, isHero) {
+            const width = 50;
+            const height = 80;
+            const carColor = isHero ? '#ec4899' : '#dc2626'; // Pink for Hero, Red for Villain
+
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Wheels
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(-6, 10, 8, 18);
+            ctx.fillRect(width - 2, 10, 8, 18);
+            ctx.fillRect(-6, height - 28, 8, 18);
+            ctx.fillRect(width - 2, height - 28, 8, 18);
+
+            // Car body
+            ctx.fillStyle = carColor;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, width, height, 16);
+            ctx.fill();
+
+            // Stripe
+            ctx.fillStyle = isHero ? '#ffffff' : '#000000';
+            ctx.fillRect(width / 2 - 4, 0, 8, height);
+
+            // Cockpit
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.roundRect(6, 12, width - 12, 24, 8);
+            ctx.fill();
+
+            // Headlights
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.arc(8, 4, 4, 0, Math.PI * 2);
+            ctx.arc(width - 8, 4, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Face Avatar Cutout
+            const faceRadius = 14;
+            const faceCenterX = width / 2;
+            const faceCenterY = 24;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(faceCenterX, faceCenterY, faceRadius, 0, Math.PI * 2);
+            ctx.clip();
+
+            if (racerImages[racerId]) {
+                ctx.drawImage(
+                    racerImages[racerId],
+                    faceCenterX - faceRadius,
+                    faceCenterY - faceRadius,
+                    faceRadius * 2,
+                    faceRadius * 2
+                );
+            } else {
+                ctx.fillStyle = isHero ? '#fbcfe8' : '#fed7aa';
+                ctx.fillRect(faceCenterX - faceRadius, faceCenterY - faceRadius, faceRadius * 2, faceRadius * 2);
+
+                // Eyes
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.arc(faceCenterX - 5, faceCenterY - 2, 2.5, 0, Math.PI * 2);
+                ctx.arc(faceCenterX + 5, faceCenterY - 2, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Mouth
+                ctx.strokeStyle = isHero ? '#be123c' : '#991b1b';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(faceCenterX, faceCenterY + 3, 4, 0.1 * Math.PI, 0.9 * Math.PI);
+                ctx.stroke();
+
+                if (isHero) {
+                    // Baby Bindi Dot
+                    ctx.fillStyle = '#0f172a';
+                    ctx.beginPath();
+                    ctx.arc(faceCenterX, faceCenterY - 8, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+
+            // Border Ring
+            ctx.strokeStyle = isHero ? '#ffffff' : '#f87171';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(faceCenterX, faceCenterY, faceRadius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // --- GAME END TRIGGER ---
+        function triggerGameEnd(heroWon) {
+            isGameRunning = false;
+            cancelAnimationFrame(animationFrameId);
+
+            document.getElementById('victoryScreen').classList.remove('hidden');
+            document.getElementById('victoryScreen').classList.add('flex');
+
+            const resultIcon = document.getElementById('resultIcon');
+            const winnerTitle = document.getElementById('winnerTitle');
+            const winnerSub = document.getElementById('winnerSub');
+            const winnerImg = document.getElementById('winnerAvatarImg');
+            const winnerEmoji = document.getElementById('winnerAvatarEmoji');
+
+            if (heroWon) {
+                soundSys.playWin();
+                resultIcon.innerText = "🏆";
+                winnerTitle.innerText = "HERO BABY WINS! 🎉";
+                winnerSub.innerText = "Awesome driving! You outran the Villain Kid AI!";
+                
+                if (racerImages[1]) {
+                    winnerImg.src = racerImages[1].src;
+                    winnerImg.classList.remove('hidden');
+                    winnerEmoji.classList.add('hidden');
+                } else {
+                    winnerImg.classList.add('hidden');
+                    winnerEmoji.classList.remove('hidden');
+                    winnerEmoji.innerText = '👶';
+                }
+            } else {
+                soundSys.playLose();
+                resultIcon.innerText = "😈";
+                winnerTitle.innerText = "VILLAIN KID WINS!";
+                winnerSub.innerText = "The Villain Kid computer AI beat you to the finish line! Try again!";
+
+                if (racerImages[2]) {
+                    winnerImg.src = racerImages[2].src;
+                    winnerImg.classList.remove('hidden');
+                    winnerEmoji.classList.add('hidden');
+                } else {
+                    winnerImg.classList.add('hidden');
+                    winnerEmoji.classList.remove('hidden');
+                    winnerEmoji.innerText = '👦';
+                }
+            }
+
+            document.getElementById('finalScore').innerText = Math.round(player.score);
+            document.getElementById('finalSpeed').innerText = `${player.topSpeedReached} km/h`;
+            document.getElementById('finalItems').innerText = player.itemsCollected;
+        }
+
+        function backToMenu() {
+            document.getElementById('victoryScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('selectionScreen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
